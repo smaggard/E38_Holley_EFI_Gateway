@@ -60,9 +60,6 @@ BO_ 2147484865 Engine_General_Status_4: 8 ECM
  SG_ Engine_Coolant_Temperature : 23|8@0+ (1,-40) [-40|215] "C"  ECM
  SG_ IAT : 31|8@0+ (1,-40) [-40|215] "C"  ECM
 
-BO_ 2147484897 Vehicle_VIN_10_17: 8 BCM
- SG_ Vehicle_VIN_10_17 : 7|64@1- (1,0) [0|1] ""  ECM
-
 BO_ 2147484665 Engine_General_Status_3: 8 ECM
  SG_ Fuel_Injected_Rolling_Count_Reset : 7|1@0+ (1,0) [0|1] ""  ECM
  SG_ Generator_Field_Duty_Cycle_Valid : 6|1@0+ (1,0) [0|1] ""  ECM
