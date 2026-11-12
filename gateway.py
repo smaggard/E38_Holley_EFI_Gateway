@@ -41,6 +41,9 @@ def float_to_array(val: float) -> List:
 def hex_to_float(f: str) -> float:
     return struct.unpack('!f',bytes.fromhex(f))[0]
 
+def bit_read(x: int, n: int) -> int:
+  return (x >> n) & 1
+
 def holley_can_listener() -> None:
   # to do
 
