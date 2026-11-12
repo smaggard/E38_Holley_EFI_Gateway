@@ -2,24 +2,20 @@ import struct
 from typing import List
 
 # A map of the Holley CAN IDS to their names for human readability
-holley_id_map = {
-  "TCU Gear": 0x1E4FD000, # CAN INPUT 22
-  "Parking Flag": 0x1E52D000, # CAN INPUT 34
-  "fuelLevel": 0x1E202001, # CAN ID 1, input 1
-  "acKick": 0x1E206001, # CAN ID 1 input 2
-  "acHighSidePressure": 0x1E20A001, # CAN ID 1 input 3
-  "reducedPower": 0x1E20E001, # CAN ID 1 input 4
-  "outsideAir": 0x1E212001, # CAN ID 1 input 5
-}
+TCUGear = 0x1E4FD000 # CAN INPUT 22
+parkingFlag = 0x1E52D000 # CAN INPUT 34
+fuelLevel = 0x1E202001 # CAN ID 1, input 1
+acKick = 0x1E206001 # CAN ID 1 input 2
+acHighSidePressure = 0x1E20A001 # CAN ID 1 input 3
+reducedPower = 0x1E20E001 # CAN ID 1 input 4
+outsideAir = 0x1E212001 # CAN ID 1 input 5
 
 # A map of the GM CAN IDS to their names for human readability
-gm_id_map = {
-  "Engine_General_Status_5": 0x4D1,
-  "Engine_General_Status_2": 0x3D1,
-  "Engine_General_Status_3": 0x3F9,
-  "OutSideAirTemp": 0x3F1,
-  "Transmission_General_Status_2": 0x1F5
-}
+Engine_General_Status_5 = 0x4D1
+Engine_General_Status_2 = 0x3D1
+Engine_General_Status_3 = 0x3F9
+OutSideAirTemp = 0x3F1
+Transmission_General_Status_2 = 0x1F5
 
 # List of IDS to filter on the Holley side.
 holley_target_ids = [0x1E4FD000, 0x1E52D000]
@@ -37,21 +33,24 @@ def float_to_array(val: float) -> List:
       Returns:
         List: A list of the hex values that represent the float.
   """
-  hexarray = [f"0x{b:02x}" for b in struct.pack(">f", val)]
-  return hexarray
+  try:
+    hexarray = [f"0x{b:02x}" for b in struct.pack(">f", val)]
+    return [int(x, 16) for x in hexarray]
+  except Exception as e:
+    print(e)
 
 # Convert Hex to Floating point.
 def hex_to_float(f: str) -> float:
     """ Create a float from an incoming Holley EFI Hex List the float can then be used.
         The list first needs to be converted to a raw string.
 
-        Example: 
+        Example:
           raw_bytes = str(msg.data.hex())[:8]
           value = hex_to_float(raw_bytes)
 
         Args:
           f (str): Hex array as a string
-          
+
         Returns:
           float: A float reprentation of the hex array.
   """
@@ -68,6 +67,18 @@ def bit_read(x: int, n: int) -> int:
         int: Value of bit in [0,1] of the bit location requested.
   """
   return (x >> n) & 1
+
+def create_hex_list(data: bytearray) -> List:
+  """ Converts an incoming CAN message into a hex list
+
+      Args:
+        data (bytearray):  the msg.data object to convert
+
+      Returns:
+        List: A hex value list of the bytearray
+  """
+  hex_list = [f"0x{b:02x}" for b in data]
+  return hex_list
 
 def read_gear(value: int, park_flag: bool) -> List:
   """ Takes the current gear value and park_flag values as integers and returns
@@ -112,7 +123,7 @@ def read_gear(value: int, park_flag: bool) -> List:
       gear_list[6] = 0x03
   # Return the list.
   return gear_list
-      
+
 
 
 if __name__ == "__main__":
