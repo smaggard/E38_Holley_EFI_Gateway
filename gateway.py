@@ -23,19 +23,47 @@ gm_filters = [
 ]
 
 holley_filters = [
-  {"can_id": msg_id, "can_mask": 0xFFFFF800, "extended": True}
+  {"can_id": msg_id, "can_mask": 0x1FFFF800, "extended": True}
   for msg_id in smaggard_can.holley_target_ids
 ]
+print(holley_filters)
 
-can0 = can.interface.Bus(channel = 'can0', interface = 'socketcan', can_filters = gm_filters)
-can1 = can.interface.Bus(channel = 'can1', interface = 'socketcan', can_filters = holley_filters)
+can0 = can.Bus(channel = 'can0', interface = 'socketcan', can_filters = gm_filters)
+can1 = can.Bus(channel = 'can1', interface = 'socketcan', can_filters = holley_filters)
 
 def holley_can_listener() -> None:
-  # to do
-  while 1:
-    print("In Holley can")
-    sleep(10)
-
+  # Define Park, always assume park on first run
+  park_flag = 1.0
+  try:
+    log.info("Starting CAN Interface")
+    with can1 as Bus:
+      for msg in Bus:
+        msg_id = msg.arbitration_id & 0x1FFFF800
+        raw_bytes = str(msg.data.hex())[:8]
+        if len(raw_bytes) == 8:
+          value = round(smaggard_can.hex_to_float(raw_bytes),2)
+          match msg_id:
+            case 0x1E52D000:
+              park_flag = value
+              print(park_flag)
+            case 0x1E4FD000:
+              can_data = smaggard_can.read_gear(int(value), bool(park_flag))
+              msg = can.Message(arbitration_id=0x1F5, data=can_data, is_extended_id=False)
+              try:
+                can0.send(msg)
+                print("Sent message to GM")
+              except can.CanError as e:
+                print(f"Message not sent: {e}")
+              print(can_data)
+            case _:
+              continue
+        else:
+          continue
+            
+  except Exception as e:
+    log.error(e)
+    print(e)
+        
 def gm_can_listener() -> None:
   #to do
   while 1:

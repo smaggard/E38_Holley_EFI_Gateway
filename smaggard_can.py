@@ -4,7 +4,7 @@ from typing import List
 # A map of the Holley CAN IDS to their names for human readability
 holley_id_map = {
   "TCU Gear": 0x1E4FD000, # CAN INPUT 22
-  "Parking Flag": 0x1E52D00, # CAN INPUT 34
+  "Parking Flag": 0x1E52D000, # CAN INPUT 34
   "fuelLevel": 0x1E202001, # CAN ID 1, input 1
   "acKick": 0x1E206001, # CAN ID 1 input 2
   "acHighSidePressure": 0x1E20A001, # CAN ID 1 input 3
@@ -68,6 +68,51 @@ def bit_read(x: int, n: int) -> int:
         int: Value of bit in [0,1] of the bit location requested.
   """
   return (x >> n) & 1
+
+def read_gear(value: int, park_flag: bool) -> List:
+  """ Takes the current gear value and park_flag values as integers and returns
+      a list that would be sent to the GM E38 ECU/BCM module to let it know
+      what gear the transmission is currently in.
+
+      Args:
+        value (int): Current gear value.
+        park_flag (bool): Current Park Flag
+
+      Returns:
+        List: 8 length list depicting the current selected gear as the GM ECM/BCM
+              expects to see.
+  """
+  # Create an list of 0's
+  gear_list = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+  # Match on value
+  match value:
+    # Neutral/Park
+    case 0:
+      # Park
+      if park_flag: # Neutral
+        gear_list[0] = 0x0F
+        gear_list[1] = 0x0F
+        gear_list[3] = 0x01
+      # Neutral
+      elif not park_flag:
+        gear_list[0] = 0x0D
+        gear_list[1] = 0x0D
+        gear_list[3] = 0x03
+    # Reverse
+    case -1:
+      gear_list[0] = 0x0E
+      gear_list[1] = 0x0E
+      gear_list[3] = 0x02
+      gear_list[6] = 0x02
+    # In Gear
+    case x if x > 0:
+      gear_list[0] = hex(x)
+      gear_list[1] = hex(x)
+      gear_list[3] = 0x04
+      gear_list[6] = 0x03
+  # Return the list.
+  return gear_list
+      
 
 
 if __name__ == "__main__":
